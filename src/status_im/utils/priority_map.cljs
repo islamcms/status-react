@@ -184,7 +184,7 @@
 
 (defn- read-priority-map [elems]
   (if (map? elems)
-    (into status-im.utils-map.PersistentPriorityMap.EMPTY elems)
+    (into PersistentPriorityMap.EMPTY elems)
     (throw (js/Error "Priority map literal expects a map for its elements."))))
 
 (register-tag-parser! "status-im.utils.priority-map" read-priority-map)

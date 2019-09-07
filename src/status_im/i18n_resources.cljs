@@ -1,11 +1,11 @@
 (ns status-im.i18n-resources
   (:require-macros [status-im.i18n :as i18n])
-  (:require [status-im.react-native.js-dependencies :as rn-dependencies]
-            [status-im.utils.types :as types]
-            [clojure.string :as string]))
+  (:require [status-im.utils.types :as types]
+            [clojure.string :as string]
+            ["react-native-languages" :default react-native-languages]))
 
 (def default-device-language
-  (keyword (.-language rn-dependencies/react-native-languages)))
+  (keyword (.-language react-native-languages)))
 
 ;; translations
 (def translations-by-locale

@@ -1,10 +1,11 @@
 (ns status-im.desktop.deep-links
   (:require [re-frame.core :as re-frame]
             [status-im.react-native.js-dependencies :as js-dependencies]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            ["react-native" :refer (NativeEventEmitter)]))
 
 (defn add-event-listener []
-  (let [event-emitter (new (.-NativeEventEmitter js-dependencies/react-native)
+  (let [event-emitter (new NativeEventEmitter
                            js-dependencies/desktop-linking)]
     (.addListener event-emitter
                   "urlOpened"

@@ -1,10 +1,8 @@
 (ns status-im.ethereum.core
   (:require [clojure.string :as string]
             [status-im.ethereum.tokens :as tokens]
-            [status-im.js-dependencies :as dependencies]
-            [status-im.utils.money :as money]))
-
-(def utils dependencies/web3-utils)
+            [status-im.utils.money :as money]
+            ["web3-utils" :as utils]))
 
 (defn sha3 [s]
   (when s

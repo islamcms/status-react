@@ -370,7 +370,7 @@
   ([value currency-code]
    (format-currency value currency-code true))
   ([value currency-code currency-symbol?]
-   (.addTier2Support goog/i18n.currency)
+   (.addTier2Support ^js goog/i18n.currency)
    (let [currency-code-to-nfs-map {"ZAR" goog/i18n.NumberFormatSymbols_af
                                    "ETB" goog/i18n.NumberFormatSymbols_am
                                    "EGP" goog/i18n.NumberFormatSymbols_ar

@@ -8,7 +8,6 @@
             [status-im.ethereum.json-rpc :as json-rpc]
             [status-im.ethereum.resolver :as resolver]
             [status-im.i18n :as i18n]
-            [status-im.js-dependencies :as js-dependencies]
             [status-im.native-module.core :as status]
             [status-im.ui.components.list-selection :as list-selection]
             [status-im.ui.screens.navigation :as navigation]
@@ -24,7 +23,9 @@
             [status-im.signing.core :as signing]
             [status-im.multiaccounts.update.core :as multiaccounts.update]
             [status-im.ui.components.bottom-sheet.core :as bottom-sheet]
-            [status-im.browser.webview-ref :as webview-ref]))
+            [status-im.browser.webview-ref :as webview-ref]
+            ["eth-phishing-detect" :as eth-phishing-detect]
+            ["hi-base32" :as hi-base32]))
 
 (fx/defn update-browser-option
   [{:keys [db]} option-key option-value]
@@ -69,7 +70,7 @@
 
 (defn check-if-phishing-url [{:keys [history history-index] :as browser}]
   (let [history-host (http/url-host (try (nth history history-index) (catch js/Error _)))]
-    (cond-> browser history-host (assoc :unsafe? (js-dependencies/phishing-detect history-host)))))
+    (cond-> browser history-host (assoc :unsafe? (eth-phishing-detect history-host)))))
 
 (defn- content->hash [hex]
   (when (and hex (not= hex "0x"))
@@ -163,7 +164,7 @@
 
 (defmethod storage-gateway :ipfs
   [{:keys [hash]}]
-  (let [base32hash (-> (.encode js-dependencies/hi-base32 (alphabase.base58/decode hash))
+  (let [base32hash (-> (.encode hi-base32 (alphabase.base58/decode hash))
                        (string/replace #"=" "")
                        (string/lower-case))]
     (str base32hash ".infura.status.im")))
@@ -420,7 +421,7 @@
 (re-frame/reg-fx
  :browser/send-to-bridge
  (fn [message]
-   (let [webview @webview-ref/webview-ref
+   (let [^js webview @webview-ref/webview-ref
          msg (str "ReactNativeWebView.onMessage('"
                   (types/clj->json message)
                   "');")]

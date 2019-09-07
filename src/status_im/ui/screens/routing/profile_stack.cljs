@@ -28,7 +28,9 @@
             [status-im.ui.screens.mobile-network-settings.view
              :as
              mobile-network-settings]
-            [status-im.network.module :as network]
+            [status-im.network.ui.edit-network.views :as edit-network]
+            [status-im.network.ui.views :as network]
+            [status-im.network.ui.network-details.views :as network-details]
             [status-im.ui.screens.network-info.views :as network-info]
             [status-im.ui.screens.log-level-settings.views :as log-level-settings]
             [status-im.ui.screens.fleet-settings.views :as fleet-settings]
@@ -101,13 +103,13 @@
     {:name      :manage-dapps-permissions
      :component dapps-permissions/manage}
     {:name      :network-settings
-     :component network/network-settings-view}
+     :component network/network-settings}
     {:name      :network-details
-     :component network/network-details-view}
+     :component network-details/network-details}
     {:name      :network-info
      :component network-info/network-info}
     {:name      :edit-network
-     :component network/edit-network-view}
+     :component edit-network/edit-network}
     {:name      :log-level-settings
      :component log-level-settings/log-level-settings}
     {:name      :fleet-settings

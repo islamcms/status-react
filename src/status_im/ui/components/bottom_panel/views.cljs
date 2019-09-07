@@ -4,7 +4,7 @@
             [status-im.ui.components.animation :as anim]
             [reagent.core :as reagent]
             [status-im.ui.components.colors :as colors]
-            [status-im.react-native.js-dependencies :as js-dependencies]))
+            ["react-native" :refer (BackHandler)]))
 
 (def back-listener (atom nil))
 
@@ -15,7 +15,7 @@
 
 (defn add-back-listener []
   (remove-back-listener)
-  (reset! back-listener (.addEventListener js-dependencies/back-handler
+  (reset! back-listener (.addEventListener BackHandler
                                            "hardwareBackPress"
                                            (fn [] true))))
 

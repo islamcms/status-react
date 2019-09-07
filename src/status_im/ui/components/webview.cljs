@@ -1,16 +1,17 @@
 (ns status-im.ui.components.webview
   (:require [reagent.core :as reagent]
-            [status-im.react-native.js-dependencies :as js-dependencies]
             [reagent.core :as reagent.core]
             [status-im.utils.platform :as platform]
-            [status-im.utils.config :as config]))
+            [status-im.utils.config :as config]
+            ["react-native" :as react-native]
+            ["react-native-webview" :default webview]))
 
 (def webview-class
   (memoize
    (fn []
-     (reagent/adapt-react-class (.-default js-dependencies/webview)))))
+     (reagent/adapt-react-class webview))))
 
-(defn module [] (.-WebViewModule (.-NativeModules js-dependencies/react-native)))
+(defn module [] (.-WebViewModule (.-NativeModules react-native)))
 
 (defn webview [{:keys [dapp? dapp-name] :as opts}]
   (if (and config/cached-webviews-enabled? platform/android? dapp?)

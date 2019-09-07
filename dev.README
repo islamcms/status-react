@@ -1,0 +1,16 @@
+```
+make shell
+ln -s mobile_files/package.json.orig package.json
+yarn install
+shadow-cljs watch android
+```
+
+then in another shell
+```
+make react-native-android 
+```
+
+then in another shell
+```
+make run-android
+```

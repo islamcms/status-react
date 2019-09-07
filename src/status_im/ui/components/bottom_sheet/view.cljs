@@ -2,8 +2,8 @@
   (:require [status-im.ui.components.react :as react]
             [status-im.ui.components.animation :as animation]
             [status-im.ui.components.bottom-sheet.styles :as styles]
-            [status-im.react-native.js-dependencies :as js-dependencies]
             [status-im.utils.platform :as platform]
+            ["react-native" :refer (BackHandler)]
             [reagent.core :as reagent]
             [re-frame.core :as re-frame]))
 
@@ -36,7 +36,7 @@
 
 (defn- on-move
   [{:keys [height bottom-value opacity-value]}]
-  (fn [_ state]
+  (fn [_ ^js state]
     (let [dy (.-dy state)]
       (cond (pos? dy)
             (let [opacity (max min-opacity (- 1 (/ dy (- height swipe-opacity-range))))]
@@ -78,14 +78,14 @@
   (.create
    react/pan-responder
    (clj->js
-    {:onMoveShouldSetPanResponder (fn [_ state]
+    {:onMoveShouldSetPanResponder (fn [_ ^js state]
                                     (or (< 10 (js/Math.abs (.-dx state)))
                                         (< 5 (js/Math.abs (.-dy state)))))
      :onPanResponderMove          (on-move opts)
      :onPanResponderRelease       (on-release opts)
      :onPanResponderTerminate     (on-release opts)})))
 
-(defn- pan-handlers [pan-responder]
+(defn- pan-handlers [^js pan-responder]
   (js->clj (.-panHandlers pan-responder)))
 
 (defn- on-open [{:keys [bottom-value internal-atom opacity-value]}]
@@ -154,7 +154,7 @@
                           :internal-atom internal-visible
                           :height        height})
                 (when platform/android?
-                  (reset! back-listener (.addEventListener js-dependencies/back-handler
+                  (reset! back-listener (.addEventListener BackHandler
                                                            "hardwareBackPress"
                                                            handle-back))))
 
@@ -196,7 +196,7 @@
                [react/view {:style     {:padding-top    styles/vertical-padding
                                         :padding-bottom (+ styles/vertical-padding
                                                            (:bottom safe-area))}
-                            :on-layout #(->> %
+                            :on-layout #(->> ^js %
                                              .-nativeEvent
                                              .-layout
                                              .-height

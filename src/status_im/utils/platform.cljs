@@ -2,10 +2,10 @@
   (:require [status-im.android.platform :as android]
             [status-im.ios.platform :as ios]
             [status-im.desktop.platform :as desktop]
-            [status-im.react-native.js-dependencies :as rn-dependencies]))
+            ["react-native" :as react-native]))
 
 (def platform
-  (.-Platform rn-dependencies/react-native))
+  (.-Platform react-native))
 
 (def os
   (when platform

@@ -9,7 +9,7 @@
             [status-im.native-module.core :as status]
             [clojure.string :as s]
             [goog.object :refer [get]]
-            [status-im.goog.i18n-module :as goog.18n]))
+            [status-im.goog.i18n :as goog.18n]))
 
 (defn now []
   (t/now))
@@ -25,7 +25,7 @@
 (def time-zone-offset (hours (- (/ (.getTimezoneOffset (js/Date.)) 60))))
 
 ;; detects if given locale symbols timeformat generates AM/PM ("a")
-(defn- is24Hour-locsym [locsym]
+(defn- is24Hour-locsym [^js locsym]
   (not (s/includes?
         (nth (.-TIMEFORMATS locsym) 2)
         "a")))
@@ -43,7 +43,7 @@
 
 ;; date formats
 (defn- short-date-format [locsym] "dd MMM")
-(defn- medium-date-format [locsym] (nth (.-DATEFORMATS locsym) 2)) ; get medium format from current locale symbols
+(defn- medium-date-format [^js locsym] (nth (.-DATEFORMATS locsym) 2)) ; get medium format from current locale symbols
 
 ;; date-time formats
 (defn- medium-date-time-format [locsym]

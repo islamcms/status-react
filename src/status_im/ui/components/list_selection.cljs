@@ -5,8 +5,7 @@
             [status-im.ui.components.dialog :as dialog]
             [status-im.ui.components.react :as react]
             [status-im.utils.platform :as platform]
-            [status-im.utils.http :as http]
-            [status-im.ui.components.popup-menu.views :refer [show-desktop-menu]]))
+            [status-im.utils.http :as http]))
 
 (defn open-share [content]
   (when (or (:message content)
@@ -16,8 +15,7 @@
 (defn show [options]
   (cond
     platform/ios?     (action-sheet/show options)
-    platform/android? (dialog/show options)
-    platform/desktop? (show-desktop-menu (->> (:options options) (remove nil?)))))
+    platform/android? (dialog/show options)))
 
 (defn- platform-web-browser []
   (if platform/ios? :t/browsing-open-in-ios-web-browser :t/browsing-open-in-android-web-browser))

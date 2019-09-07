@@ -2,18 +2,16 @@
   (:refer-clojure :exclude [set])
   (:require [reagent.core :as reagent]
             [oops.core :refer [oget ocall]]
-            [status-im.react-native.js-dependencies :as js-deps]))
+            ["react-native-reanimated" :default animated :refer (clockRunning Easing)]
+            ["react-native-gesture-handler"
+             :refer (TapGestureHandler PanGestureHandler LongPressGestureHandler
+                                       PureNativeButton TouchableWithoutFeedback createNativeWrapper State)]
+            ["react-native-redash" :as redash]))
 
-(def animated (oget js-deps/react-native-reanimated "default"))
-(def createAnimatedComponent (oget animated "createAnimatedComponent"))
-
-(def view (reagent/adapt-react-class (oget animated "View")))
-(def text (reagent/adapt-react-class (oget animated "Text")))
-(def scroll-view (reagent/adapt-react-class (oget animated "ScrollView")))
-(def code (reagent/adapt-react-class (oget animated "Code")))
-
-(def clock-running (oget js-deps/react-native-reanimated "clockRunning"))
-(def Easing (oget js-deps/react-native-reanimated "Easing"))
+(def view (reagent/adapt-react-class (.-View animated)))
+(def text (reagent/adapt-react-class (.-Text animated)))
+(def scroll-view (reagent/adapt-react-class (.-ScrollView animated)))
+(def code (reagent/adapt-react-class (.-Code animated)))
 
 (def eq (oget animated "eq"))
 (def neq (oget animated "neq"))
@@ -33,8 +31,8 @@
 (def set (oget animated "set"))
 (def start-clock (oget animated "startClock"))
 (def stop-clock (oget animated "stopClock"))
-(def bezier (oget Easing "bezier"))
-(def linear (oget Easing "linear"))
+(def bezier (.-bezier Easing))
+(def linear (.-linear Easing))
 
 (defn set-value [anim val]
   (ocall anim "setValue" val))
@@ -104,24 +102,19 @@
 ;; Gesture handler
 
 (def tap-gesture-handler
-  (reagent/adapt-react-class
-   (oget js-deps/react-native-gesture-handler "TapGestureHandler")))
+  (reagent/adapt-react-class TapGestureHandler))
 
 (def pan-gesture-handler
-  (reagent/adapt-react-class
-   (oget js-deps/react-native-gesture-handler "PanGestureHandler")))
+  (reagent/adapt-react-class PanGestureHandler))
 
 (def long-press-gesture-handler
-  (reagent/adapt-react-class
-   (oget js-deps/react-native-gesture-handler "LongPressGestureHandler")))
+  (reagent/adapt-react-class LongPressGestureHandler))
 
-(def pure-native-button (oget js-deps/react-native-gesture-handler "PureNativeButton"))
+(def pure-native-button PureNativeButton)
 
-(def touchable-without-feedback-class
-  (oget js-deps/react-native-gesture-handler "TouchableWithoutFeedback"))
+(def touchable-without-feedback-class TouchableWithoutFeedback)
 
-(def createNativeWrapper
-  (oget js-deps/react-native-gesture-handler "createNativeWrapper"))
+(def createNativeWrapper createNativeWrapper)
 
 (def touchable-without-feedback
   (reagent/adapt-react-class touchable-without-feedback-class))
@@ -129,9 +122,9 @@
 (def animated-raw-button
   (reagent/adapt-react-class
    (createNativeWrapper
-    (createAnimatedComponent touchable-without-feedback-class))))
+    (.createAnimatedComponent animated touchable-without-feedback-class))))
 
-(def state (oget js-deps/react-native-gesture-handler "State"))
+(def state State)
 
 (def states {:began        (oget state "BEGAN")
              :active       (oget state "ACTIVE")
@@ -141,8 +134,6 @@
              :undetermined (oget state "UNDETERMINED")})
 
 ;; utilities
-
-(def redash js-deps/react-native-redash)
 
 (def clamp (oget redash "clamp"))
 
@@ -156,4 +147,4 @@
   (ocall redash "timing" (clj->js config)))
 
 (defn on-scroll [opts]
-  (ocall redash "onScroll" (clj->js opts)))
+  (ocall redash "onScrollEvent" (clj->js opts)))

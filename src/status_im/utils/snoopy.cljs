@@ -1,14 +1,13 @@
 (ns status-im.utils.snoopy
-  (:require [status-im.react-native.js-dependencies :as js-dependencies]
-            [status-im.utils.config :as config]))
-
-(def snoopy (.-default js-dependencies/snoopy))
-(def sn-filter (.-default js-dependencies/snoopy-filter))
-(def bars (.-default js-dependencies/snoopy-bars))
-(def buffer (.-default js-dependencies/snoopy-buffer))
+  (:require [status-im.utils.config :as config]
+            ["react-native/Libraries/vendor/emitter/EventEmitter" :refer [EventEmitter]]
+            ["rn-snoopy" :default snoopy]
+            ["rn-snoopy/stream/filter" :default sn-filter]
+            ["rn-snoopy/stream/bars" :default bars]
+            ["rn-snoopy/stream/buffer" :default buffer]))
 
 (defn create-filter [f]
-  (fn [message]
+  (fn [^js message]
     (let [method    (.-method message)
           module    (.-module message)
           args      (.-args message)
@@ -73,7 +72,7 @@
 ;; and then collect printed data in logs.
 (defn subscribe! []
   (when config/snoopy-enabled?
-    (let [emitter-class js-dependencies/EventEmmiter
+    (let [emitter-class EventEmitter
           emitter       (emitter-class.)
           events        (.stream snoopy emitter)]
       (threshold-warnings
@@ -101,8 +100,7 @@
                                 "Please consider preloading of screens or lazy loading of some components")
         :tick?             false
         :print-events?     true
-       ;; todo(rasom): revisit this number when/if
-       ;; https://github.com/status-im/status-react/pull/2849 will be merged
+        ;; todo(rasom): revisit this number when/if
+        ;; https://github.com/status-im/status-react/pull/2849 will be merged
         :threshold         200
         :events            events}))))
-

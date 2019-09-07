@@ -4,7 +4,6 @@
             [status-im.ui.components.toolbar.view :as toolbar]
             [status-im.ui.components.toolbar.actions :as actions]
             [status-im.ui.components.colors :as colors]
-            [status-im.react-native.js-dependencies :as js-dependencies]
             [status-im.react-native.resources :as resources]
             [status-im.ui.components.common.common :as components.common]
             [re-frame.core :as re-frame]

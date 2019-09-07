@@ -7,45 +7,36 @@
             [status-im.utils.core :as utils.core]
             [status-im.utils.platform :as platform]
             [status-im.i18n :as i18n]
-            [status-im.react-native.js-dependencies :as js-dependencies]
+            ["react-native" :as react-native :refer (Keyboard)]
+            ["react-native-image-crop-picker" :default image-picker]
+            ["react-native-gesture-handler" :refer (TouchableWithoutFeedback)]
+            ["react-native-safe-area-context" :as safe-area-context
+             :refer (SafeAreaView SafeAreaProvider SafeAreaConsumer)]
             [status-im.ui.components.colors :as colors]
             [status-im.ui.components.typography :as typography]))
 
-(defn get-react-property [name]
-  (if js-dependencies/react-native
-    (or (object/get js-dependencies/react-native name) {})
-    #js {}))
-
-(defn adapt-class [class]
-  (when class
-    (reagent/adapt-react-class class)))
-
-(defn get-class [name]
-  (adapt-class (get-react-property name)))
-
-(def native-modules (.-NativeModules js-dependencies/react-native))
-(def device-event-emitter (.-DeviceEventEmitter js-dependencies/react-native))
+(def native-modules (.-NativeModules react-native))
+(def device-event-emitter (.-DeviceEventEmitter react-native))
 
 (def splash-screen (.-SplashScreen native-modules))
 
 ;; React Components
 
-(def app-registry (get-react-property "AppRegistry"))
-(def app-state (get-react-property "AppState"))
-(def view (get-class "View"))
-(def progress-bar (get-class "ProgressBarAndroid"))
+(def app-registry (.-AppRegistry react-native))
+(def app-state (.-AppState react-native))
+(def view (reagent/adapt-react-class (.-View react-native)))
+(def progress-bar (reagent/adapt-react-class (.-ProgressBarAndroid react-native)))
 
-(def status-bar-class (when-not platform/desktop? (get-react-property "StatusBar")))
+(def status-bar-class (.-StatusBar react-native))
 
-(def scroll-view-class (get-class "ScrollView"))
-(def keyboard-avoiding-view-class (get-class "KeyboardAvoidingView"))
+(def scroll-view-class (reagent/adapt-react-class (.-ScrollView react-native)))
+(def keyboard-avoiding-view-class (reagent/adapt-react-class (.-KeyboardAvoidingView react-native)))
 
-
-(def text-class (get-class "Text"))
-(def text-input-class (get-class "TextInput"))
-(def image-class (get-class "Image"))
-(def picker-class (get-class "Picker"))
-(def picker-item-class (adapt-class (.-Item (get-react-property "Picker"))))
+(def text-class (reagent/adapt-react-class (.-Text react-native)))
+(def text-input-class (reagent/adapt-react-class (.-TextInput react-native)))
+(def image-class (reagent/adapt-react-class (.-Image react-native)))
+(def picker-class (reagent/adapt-react-class (.-Picker react-native)))
+(def picker-item-class (reagent/adapt-react-class (.-Item (.-Picker react-native))))
 
 (defn valid-source? [source]
   (or (not (map? source))
@@ -57,15 +48,15 @@
   (when (valid-source? source)
     [image-class props]))
 
-(def switch-class (get-class "Switch"))
+(def switch-class (reagent/adapt-react-class (.-Switch react-native)))
 
 (defn switch [props]
   [switch-class props])
 
-(def touchable-highlight-class (get-class "TouchableHighlight"))
-(def touchable-without-feedback-class (get-class "TouchableWithoutFeedback"))
-(def touchable-opacity-class (get-class "TouchableOpacity"))
-(def activity-indicator-class (get-class "ActivityIndicator"))
+(def touchable-highlight-class (reagent/adapt-react-class (.-TouchableHighlight react-native)))
+(def touchable-without-feedback-class (reagent/adapt-react-class (.-TouchableWithoutFeedback react-native)))
+(def touchable-opacity-class (reagent/adapt-react-class (.-TouchableOpacity react-native)))
+(def activity-indicator-class (reagent/adapt-react-class (.-ActivityIndicator react-native)))
 
 (defn activity-indicator [props]
   [activity-indicator-class props])
@@ -75,10 +66,10 @@
                        :ios     {:size :small}
                        :android {:size :16}}])
 
-(def modal (get-class "Modal"))
+(def modal (reagent/adapt-react-class (.-Modal react-native)))
 
-(def pan-responder (.-PanResponder js-dependencies/react-native))
-(def animated (.-Animated js-dependencies/react-native))
+(def pan-responder (.-PanResponder react-native))
+(def animated (.-Animated react-native))
 
 (def animated-view-class
   (reagent/adapt-react-class (.-View animated)))
@@ -89,11 +80,11 @@
 (defn animated-view [props & content]
   (vec (conj content props animated-view-class)))
 
-(def dimensions (.-Dimensions js-dependencies/react-native))
-(def keyboard (.-Keyboard js-dependencies/react-native))
-(defn dismiss-keyboard! [] (.dismiss keyboard))
-(def linking (.-Linking js-dependencies/react-native))
-(def desktop-notification (.-DesktopNotification (.-NativeModules js-dependencies/react-native)))
+(def dimensions (.-Dimensions react-native))
+(def keyboard (.-Keyboard react-native))
+(def dismiss-keyboard! #(.dismiss Keyboard))
+(def linking (.-Linking react-native))
+(def desktop-notification (.-DesktopNotification (.-NativeModules react-native)))
 
 (def max-font-size-multiplier 1.25)
 
@@ -144,32 +135,32 @@
   (let [render-fn (fn [options text]
                     [text-input-class
                      (merge
-                       {:underline-color-android  :transparent
-                        :max-font-size-multiplier max-font-size-multiplier
-                        :placeholder-text-color   colors/text-gray
-                        :placeholder              (i18n/label :t/type-a-message)
-                        :value                    text}
-                       (-> options
-                           (dissoc :preserve-input?)
-                           (update :style typography/get-style)
-                           (update :style dissoc :line-height)))])]
+                      {:underline-color-android  :transparent
+                       :max-font-size-multiplier max-font-size-multiplier
+                       :placeholder-text-color   colors/text-gray
+                       :placeholder              (i18n/label :t/type-a-message)
+                       :value                    text}
+                      (-> options
+                          (dissoc :preserve-input?)
+                          (update :style typography/get-style)
+                          (update :style dissoc :line-height)))])]
     (if (:preserve-input? options)
       render-fn
       (let [input-ref (atom nil)]
         (reagent/create-class
-          {:component-will-unmount #(when @input-ref
-                                      (swap! text-input-refs dissoc @input-ref))
-           :reagent-render
-           (fn [options text]
-             (render-fn (assoc options :ref                      
-                               (fn [r]
-                                 ;; Store input and its defaultValue
-                                 ;; one we receive a non-nil ref
-                                 (when (and r (nil? @input-ref))
-                                   (swap! text-input-refs assoc r (:default-value options)))
-                                 (reset! input-ref r)
-                                 (when (:ref options)
-                                   ((:ref options) r)))) text))})))))
+         {:component-will-unmount #(when @input-ref
+                                     (swap! text-input-refs dissoc @input-ref))
+          :reagent-render
+          (fn [options text]
+            (render-fn (assoc options :ref
+                              (fn [r]
+                                ;; Store input and its defaultValue
+                                ;; one we receive a non-nil ref
+                                (when (and r (nil? @input-ref))
+                                  (swap! text-input-refs assoc r (:default-value options)))
+                                (reset! input-ref r)
+                                (when (:ref options)
+                                  ((:ref options) r)))) text))})))))
 
 (defn i18n-text
   [{:keys [style key]}]
@@ -214,11 +205,8 @@
    (map value->picker-item data)))
 
 ;; Image picker
-
-(def image-picker-class js-dependencies/image-crop-picker)
-
 (defn show-access-error [o]
-  (when (= "E_PERMISSION_MISSING" (object/get o "code"))
+  (when (= "E_PERMISSION_MISSING" (.-code ^js o))
     (utils/show-popup (i18n/label :t/error)
                       (i18n/label :t/photos-access-error))))
 
@@ -226,27 +214,21 @@
   ([images-fn]
    (show-image-picker images-fn nil))
   ([images-fn media-type]
-   (let [image-picker (.-default image-picker-class)]
-     (-> image-picker
-         (.openPicker (clj->js {:multiple false :mediaType (or media-type "any")}))
-         (.then images-fn)
-         (.catch show-access-error)))))
-
-;; Net info
-(def net-info (if platform/desktop?
-                (get-react-property "NetInfo")
-                (.-default js-dependencies/net-info)))
+   (-> image-picker
+       (.openPicker (clj->js {:multiple false :mediaType (or media-type "any")}))
+       (.then images-fn)
+       (.catch show-access-error))))
 
 ;; Clipboard
 
 (def sharing
-  (.-Share js-dependencies/react-native))
+  (.-Share react-native))
 
 (defn copy-to-clipboard [text]
-  (.setString (.-Clipboard js-dependencies/react-native) text))
+  (.setString (.-Clipboard react-native) text))
 
 (defn get-from-clipboard [clbk]
-  (let [clipboard-contents (.getString (.-Clipboard js-dependencies/react-native))]
+  (let [clipboard-contents (.getString (.-Clipboard react-native))]
     (.then clipboard-contents #(clbk %))))
 
 ;; KeyboardAvoidingView
@@ -262,7 +244,7 @@
 (views/defview with-activity-indicator
   [{:keys [timeout style enabled? preview]} comp]
   (views/letsubs
-      [loading (reagent/atom true)]
+    [loading (reagent/atom true)]
     {:component-did-mount (fn []
                             (if (or (nil? timeout)
                                     (> 100 timeout))
@@ -276,10 +258,9 @@
            [activity-indicator {:animating true}]])
       comp)))
 
-(def safe-area-provider (adapt-class (object/get js-dependencies/safe-area-context "SafeAreaProvider")))
-(def safe-area-consumer (adapt-class (object/get js-dependencies/safe-area-context "SafeAreaConsumer")))
+(def safe-area-provider (reagent/adapt-react-class SafeAreaProvider))
+(def safe-area-consumer (reagent/adapt-react-class SafeAreaConsumer))
 
-(def safe-area-view (adapt-class (object/get js-dependencies/safe-area-context "SafeAreaView")))
+(def safe-area-view (reagent/adapt-react-class SafeAreaView))
 
-
-(def touchable-without-feedback-gesture (adapt-class (object/get js-dependencies/react-native-gesture-handler "TouchableWithoutFeedback")))
+(def touchable-without-feedback-gesture (reagent/adapt-react-class TouchableWithoutFeedback))

@@ -5,8 +5,9 @@
             status-im.ui.screens.db
             status-im.ui.screens.events
             status-im.subs
-            [status-im.react-native.js-dependencies :as rn-dependencies]
-            [oops.core :refer [ocall]]
+            ["react-native-languages" :default react-native-languages]
+            ["react-native-shake" :as react-native-shake]
+            ["react-native-screens" :refer (enableScreens)]
             [status-im.ui.screens.views :as views]
             [status-im.ui.components.react :as react]
             [status-im.core :as core]
@@ -29,7 +30,7 @@
       (fn [this]
         (.addListener react/keyboard
                       "keyboardWillShow"
-                      (fn [e]
+                      (fn [^js e]
                         (let [h (.. e -endCoordinates -height)]
                           (when-not (= h @keyboard-height)
                             (dispatch [:set :keyboard-height h])
@@ -40,19 +41,19 @@
                          (dispatch [:set :keyboard-height 0])))
         (.hide react/splash-screen)
         (.addEventListener react/app-state "change" app-state-change-handler)
-        (.addEventListener rn-dependencies/react-native-languages "change" on-languages-change)
-        (.addEventListener rn-dependencies/react-native-shake
+        (.addEventListener react-native-languages "change" on-languages-change)
+        (.addEventListener react-native-shake
                            "ShakeEvent"
                            on-shake)
         (dispatch [:set-initial-props (reagent/props this)]))
       :component-will-unmount
       (fn []
         (.removeEventListener react/app-state "change" app-state-change-handler)
-        (.removeEventListener rn-dependencies/react-native-languages "change" on-languages-change))
+        (.removeEventListener react-native-languages "change" on-languages-change))
       :display-name "root"
       :reagent-render views/main})))
 
 (defn init []
-  (ocall rn-dependencies/react-native-screens "enableScreens")
+  (enableScreens)
   (core/init app-root)
   (snoopy/subscribe!))

@@ -132,9 +132,9 @@
                                                        (debounce/debounce-and-dispatch
                                                         [:browser/navigation-state-changed % error?]
                                                         500))
-                                                    ;; Extract event data here due to 
-                                                    ;; https://reactjs.org/docs/events.html#event-pooling
-        :on-message                                 #(re-frame/dispatch [:browser/bridge-message-received (.. % -nativeEvent -data)])
+        ;; Extract event data here due to
+        ;; https://reactjs.org/docs/events.html#event-pooling
+        :on-message                                 #(re-frame/dispatch [:browser/bridge-message-received (.. ^js % -nativeEvent -data)])
         :on-load                                    #(re-frame/dispatch [:browser/loading-started])
         :on-error                                   #(re-frame/dispatch [:browser/error-occured])
         :injected-java-script-before-content-loaded (js-res/ethereum-provider (str network-id))

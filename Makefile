@@ -206,8 +206,9 @@ jsbundle-android: export BUILD_ENV ?= prod
 jsbundle-android: ##@jsbundle Compile JavaScript and Clojure into index.android.js
 	# Call nix-build to build the 'targets.mobile.android.jsbundle' attribute and copy the index.android.js file to the project root
 	@git clean -dxf ./index.$(TARGET).js
-	nix/scripts/build.sh targets.mobile.android.jsbundle && \
-	mv result/index.$(TARGET).js ./
+	yarn shadow-cljs release android
+	# nix/scripts/build.sh targets.mobile.android.jsbundle && \
+	# mv result/index.$(TARGET).js ./
 
 prod-build-ios: jsbundle-ios ##@legacy temporary legacy alias for jsbundle-ios
 	@echo "${YELLOW}This a deprecated target name, use jsbundle-ios.$(RESET)"
@@ -216,8 +217,7 @@ jsbundle-ios: export TARGET ?= ios
 jsbundle-ios: export BUILD_ENV ?= prod
 jsbundle-ios: ##@jsbundle Compile JavaScript and Clojure into index.ios.js
 	@git clean -dxf -f ./index.$(TARGET).js && \
-	lein jsbundle-ios && \
-	node prepare-modules.js
+	yarn shadow-cljs release ios
 
 prod-build-desktop: jsbundle-desktop ##@legacy temporary legacy alias for jsbundle-desktop
 	@echo "${YELLOW}This a deprecated target name, use jsbundle-desktop.$(RESET)"
@@ -226,8 +226,7 @@ jsbundle-desktop: export TARGET ?= $(HOST_OS)
 jsbundle-desktop: export BUILD_ENV ?= prod
 jsbundle-desktop: ##@jsbundle Compile JavaScript and Clojure into index.desktop.js
 	git clean -qdxf -f ./index.desktop.js desktop/ && \
-	lein jsbundle-desktop && \
-	node prepare-modules.js
+	lein jsbundle-desktop
 
 #--------------
 # Clojure REPL
@@ -236,7 +235,7 @@ jsbundle-desktop: ##@jsbundle Compile JavaScript and Clojure into index.desktop.
 _watch-%: ##@watch Start development for device
 	$(eval SYSTEM := $(word 2, $(subst -, , $@)))
 	$(eval DEVICE := $(word 3, $(subst -, , $@)))
-	clj -R:dev build.clj watch --platform $(SYSTEM) --$(SYSTEM)-device $(DEVICE)
+	yarn shadow-cljs watch $(SYSTEM)
 
 watch-ios-real: export TARGET := ios
 watch-ios-real: _watch-ios-real

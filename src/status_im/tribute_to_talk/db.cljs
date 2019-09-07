@@ -1,16 +1,14 @@
 (ns status-im.tribute-to-talk.db
   (:require [status-im.ethereum.core :as ethereum]
             [status-im.i18n :as i18n]
-            [status-im.js-dependencies :as dependencies]
-            [status-im.utils.money :as money]))
+            [status-im.utils.money :as money]
+            ["web3-utils" :as utils]))
 
 (defn tribute-received?
   [contact]
   (contains? (:system-tags contact) :tribute-to-talk/received))
 
 (def max-snt-amount 1000000)
-
-(def utils dependencies/web3-utils)
 
 (defn to-wei
   [s]

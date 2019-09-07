@@ -7,10 +7,10 @@
             [status-im.chat.models.message-content :as message-content]
             [status-im.chat.models.message :as chat.message]
             [status-im.constants :as constants]
-            [status-im.js-dependencies :as dependencies]
             [status-im.utils.datetime :as datetime]
             [status-im.utils.fx :as fx]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            ["emojilib" :as emojis]))
 
 (defn text->emoji
   "Replaces emojis in a specified `text`"
@@ -19,8 +19,8 @@
     (string/replace text
                     #":([a-z_\-+0-9]*):"
                     (fn [[original emoji-id]]
-                      (if-let [emoji-map (object/get (object/get dependencies/emojis "lib") emoji-id)]
-                        (object/get emoji-map "char")
+                      (if-let [emoji-map (object/get (.-lib emojis) emoji-id)]
+                        (.-char ^js emoji-map)
                         original)))))
 
 (fx/defn set-chat-input-text

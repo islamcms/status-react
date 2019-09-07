@@ -1,9 +1,9 @@
 (ns status-im.hardwallet.real-keycard
-  (:require [status-im.react-native.js-dependencies :as js-dependencies]
+  (:require ["react-native-status-keycard" :default status-keycard]
+            ["react-native" :as rn]
             [status-im.hardwallet.keycard :as keycard]))
 
-(defonce status-keycard (.-default js-dependencies/status-keycard))
-(defonce event-emitter (.-DeviceEventEmitter js-dependencies/react-native))
+(defonce event-emitter (.-DeviceEventEmitter rn))
 (defonce active-listeners (atom []))
 
 (defn check-nfc-support [{:keys [on-success]}]

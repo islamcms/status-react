@@ -1,13 +1,12 @@
 (ns status-im.utils.keychain.core
   (:require [re-frame.core :as re-frame]
             [taoensso.timbre :as log]
-            [status-im.react-native.js-dependencies :as rn]
             [status-im.utils.platform :as platform]
             [status-im.utils.security :as security]
             [status-im.native-module.core :as status]
             [status-im.utils.fx :as fx]
-            [goog.object :as object]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            ["react-native-keychain" :as react-native-keychain]))
 
 (defn- check-conditions [callback & checks]
   (if (= (count checks) 0)
@@ -30,9 +29,7 @@
 ;; to an address (`server`) property.
 
 (defn enum-val [enum-name value-name]
-  (-> rn/keychain
-      (object/get enum-name)
-      (object/get value-name)))
+  (get-in (js->clj react-native-keychain) [enum-name value-name]))
 
 ;; We need a more strict access mode for keychain entries that save user password.
 ;; iOS
@@ -67,14 +64,16 @@
 
 ;; Android only
 (defn- secure-hardware-available? [callback]
-  (-> (.getSecurityLevel rn/keychain)
+  (-> (.getSecurityLevel react-native-keychain)
       (.then (fn [level] (callback (= level keychain-secure-hardware))))))
 
 ;; iOS only
 (defn- device-encrypted? [callback]
   (-> (.canImplyAuthentication
-       rn/keychain
-       #js {:authenticationType (enum-val "ACCESS_CONTROL" "BIOMETRY_ANY_OR_DEVICE_PASSCODE")})
+       react-native-keychain
+       (clj->js
+        {:authenticationType
+         (enum-val "ACCESS_CONTROL" "BIOMETRY_ANY_OR_DEVICE_PASSCODE")}))
       (.then callback)))
 
 (defn- whisper-key-name [address]
@@ -96,7 +95,8 @@
   "Stores the credentials for the address to the Keychain"
   [server username password callback]
   (log/debug "[keychain] save-credentials")
-  (-> (.setInternetCredentials rn/keychain (string/lower-case server) username password
+  (-> (.setInternetCredentials react-native-keychain
+                               (string/lower-case server) username password
                                keychain-secure-hardware keychain-restricted-availability)
       (.then callback)))
 
@@ -105,7 +105,7 @@
   [server callback]
   (log/debug "[keychain] get-credentials")
   (if platform/mobile?
-    (-> (.getInternetCredentials rn/keychain (string/lower-case server))
+    (-> (.getInternetCredentials react-native-keychain (string/lower-case server))
         (.then callback))
     (callback))) ;; no-op for Desktop
 
@@ -199,7 +199,7 @@
  :keychain/clear-user-password
  (fn [key-uid]
    (when platform/mobile?
-     (-> (.resetInternetCredentials rn/keychain (string/lower-case key-uid))
+     (-> (.resetInternetCredentials react-native-keychain (string/lower-case key-uid))
          (.then #(when-not % (log/error (str "Error while clearing saved password."))))))))
 
 (fx/defn get-auth-method
