@@ -177,6 +177,7 @@
 
 ;;signing
 (reg-root-key-sub :signing/tx :signing/tx)
+(reg-root-key-sub :signing/in-progress? :signing/in-progress?)
 (reg-root-key-sub :signing/edit-fee :signing/edit-fee)
 
 ;;intro-wizard

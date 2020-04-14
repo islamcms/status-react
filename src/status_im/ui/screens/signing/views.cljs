@@ -64,7 +64,7 @@
      [separator]]))
 
 (defn header
-  [{:keys [in-progress?] :as sign}
+  [sign in-progress?
    {:keys [contact amount token approve?] :as tx}
    display-symbol fee fee-display-symbol]
   [react/view styles/header
@@ -136,7 +136,7 @@
 (defn signature-request [{:keys [error formatted-data
                                  fiat-amount fiat-currency
                                  keycard-step
-                                 in-progress? enabled?] :as sign} small-screen?]
+                                 enabled?] :as sign} in-progress? small-screen?]
   (let [message (:message formatted-data)
         title (case keycard-step
                 :connect :t/looking-for-cards
@@ -232,7 +232,8 @@
                        :label           (i18n/label :t/close)
                        :on-press        #(re-frame/dispatch [:hide-popover])}]]]))
 
-(views/defview password-view [{:keys [type error in-progress? enabled?] :as sign}]
+(views/defview password-view [{:keys [type error enabled?] :as sign}
+                              in-progress?]
   (views/letsubs [phrase [:signing/phrase]]
     (case type
       :password
@@ -260,9 +261,10 @@
 
 (views/defview message-sheet []
   (views/letsubs [{:keys [formatted-data type] :as sign} [:signing/sign]
+                  in-progress? [:signing/in-progress?]
                   small-screen? [:dimensions/small-screen?]]
     (if (= type :pinless)
-      [signature-request sign small-screen?]
+      [signature-request sign in-progress? small-screen?]
       [react/view styles/message
        [react/view styles/message-header
         [react/text {:style {:typography :title-bold}} (i18n/label :t/signing-a-message)]
@@ -274,7 +276,7 @@
         [react/view styles/message-border
          [react/scroll-view
           [react/text (or formatted-data "")]]]
-        [password-view sign]]])))
+        [password-view sign in-progress?]]])))
 
 (defn amount-item [prices wallet-currency amount amount-error display-symbol fee-display-symbol prices-loading?]
   (let [converted-value (* amount (get-in prices [(keyword display-symbol) (keyword (:code wallet-currency)) :price]))]
@@ -328,6 +330,7 @@
 
 (views/defview sheet [{:keys [from contact amount token approve?] :as tx}]
   (views/letsubs [fee                   [:signing/fee]
+                  in-progress?          [:signing/in-progress?]
                   sign                  [:signing/sign]
                   chain                 [:ethereum/chain-keyword]
                   {:keys [amount-error gas-error]} [:signing/amount-errors (:address from)]
@@ -339,11 +342,11 @@
     (let [display-symbol     (wallet.utils/display-symbol token)
           fee-display-symbol (wallet.utils/display-symbol (tokens/native-currency chain))]
       [react/view (styles/sheet)
-       [header sign tx display-symbol fee fee-display-symbol]
+       [header sign in-progress? tx display-symbol fee fee-display-symbol]
        [separator]
        (if sign
          [react/view {:padding-top 20}
-          [password-view sign]]
+          [password-view sign in-progress?]]
          [react/view
           (when-not mainnet?
             [react/view

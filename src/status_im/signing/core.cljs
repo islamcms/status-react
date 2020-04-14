@@ -68,14 +68,16 @@
                  :enabled? (and unmasked-pass (> (count unmasked-pass) 5)))}))
 
 (fx/defn sign-message
-  [{{:signing/keys [sign tx] :as db} :db}]
+  [{{:signing/keys [sign in-progress? tx] :as db} :db}]
   (let [{{:keys [data typed? from]} :message} tx
-        {:keys [in-progress? password]} sign
+        {:keys [password]} sign
         from (or from (ethereum/default-address db))
         hashed-password (ethereum/sha3 (security/safe-unmask-data password))]
     (when-not in-progress?
       (merge
-       {:db (update db :signing/sign assoc :error nil :in-progress? true)}
+       {:db (-> db
+                (assoc-in [:signing/sign :error] nil)
+                (assoc :signing/in-progress? true))}
        (if typed?
          {:signing.fx/sign-typed-data {:data         data
                                        :account      from
@@ -88,8 +90,8 @@
 
 (fx/defn send-transaction
   {:events [:signing.ui/sign-is-pressed]}
-  [{{:signing/keys [sign tx] :as db} :db :as cofx}]
-  (let [{:keys [in-progress? password]} sign
+  [{{:signing/keys [sign in-progress? tx] :as db} :db :as cofx}]
+  (let [{:keys [password]} sign
         {:keys [tx-obj gas gasPrice message]} tx
         hashed-password (ethereum/sha3 (security/safe-unmask-data password))]
     (if message
@@ -100,7 +102,9 @@
                                   (when gasPrice
                                     {:gasPrice (str "0x" (abi-spec/number-to-hex gasPrice))}))]
         (when-not in-progress?
-          {:db                          (update db :signing/sign assoc :error nil :in-progress? true)
+          {:db (-> db
+                   (assoc-in [:signing/sign :error] nil)
+                   (assoc :signing/in-progress? true))
            :signing/send-transaction-fx {:tx-obj   tx-obj-to-send
                                          :hashed-password hashed-password
                                          :cb       #(re-frame/dispatch [:signing/transaction-completed % tx-obj-to-send hashed-password])}})))))
