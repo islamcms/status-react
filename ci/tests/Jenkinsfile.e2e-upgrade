@@ -10,7 +10,11 @@ pipeline {
     )
     string(
       name: 'APK_NAME',
-      description: 'Filename of APK uploaded to SauceLabs.',
+      description: 'Filename of APK uploaded to SauceLabs',
+    )
+     string(
+      name: 'APK_NAME_UPGRADE',
+      description: 'Filename of APK of upgraded application',
     )
   }
 
@@ -47,12 +51,12 @@ pipeline {
         ]) {
           dir('test/appium/tests') {
             sh """
-              python3 -m pytest -m testrail_id \
-                -k "not upgrade" \
+              python3 -m pytest -m upgrade \
                 -n24 --rerun_count=2 \
                 --testrail_report=True \
                 --network=${params.NETWORK} \
-                --apk=${params.APK_NAME}
+                --apk=${params.APK_NAME} \
+                --apk_upgrade=${params.APK_NAME_UPGRADE}
             """
           }
         }
