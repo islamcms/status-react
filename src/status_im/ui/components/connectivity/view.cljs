@@ -12,9 +12,6 @@
             [status-im.utils.platform :as platform]
             [taoensso.timbre :as log]))
 
-(def connectivity-bar-height 36)
-(def neg-connectivity-bar-height (- connectivity-bar-height))
-
 ;; ui-connectivity-status delays
 (def standard-delay 1000)
 (def long-delay 5000)
@@ -78,65 +75,68 @@
 
 (def to-hide? (reagent/atom false))
 
-(defn manage-visibility [connected? animate? anim-opacity anim-y status-hidden]
+(defn manage-visibility
   "status-hidden is a per-view state, while to-hide? is a global state common to
 all connectivity views (we have at least one view in home and one in chat)"
-  (if connected?
-    (if animate?
-      (when (and @to-hide? (not @status-hidden))
-        (animation/start
-         (animation/parallel
-          [(animation/timing anim-opacity
-                             {:toValue         0
-                              :delay           800
-                              :duration        150
-                              :easing          (.-ease (animation/easing))
-                              :useNativeDriver true})
-           (animation/timing anim-y
-                             {:toValue         (if platform/desktop? 0 neg-connectivity-bar-height)
-                              :delay           800
-                              :duration        150
-                              :easing          (.-ease (animation/easing))
-                              :useNativeDriver true})])
-         ;; second param of start() - a callback that fires when animation stops
-         #(do (reset! to-hide? false) (reset! status-hidden true))))
-      (do
-        (animation/set-value anim-opacity 0)
-        (animation/set-value anim-y (if platform/desktop? 0 neg-connectivity-bar-height))
-        (reset! to-hide? false)
-        (reset! status-hidden true)))
-    ;; else
-    (if animate?
-      (when (and (not @to-hide?) @status-hidden)
-        (animation/start
-         (animation/parallel
-          [(animation/timing anim-opacity
-                             {:toValue         1
-                              :duration        150
-                              :easing          (.-ease (animation/easing))
-                              :useNativeDriver true})
-           (animation/timing anim-y
-                             {:toValue         (if platform/desktop? connectivity-bar-height 0)
-                              :duration        150
-                              :easing          (.-ease (animation/easing))
-                              :useNativeDriver true})])
-         ;; second param of start() - a callback that fires when animation stops
-         #(do (reset! to-hide? true) (reset! status-hidden false))))
-      (do
-        (animation/set-value anim-opacity 1)
-        (animation/set-value anim-y (if platform/desktop? connectivity-bar-height 0))
-        (reset! to-hide? true)
-        (reset! status-hidden false)))))
+  [connected? animate? anim-opacity anim-y status-hidden connectivity-bar-height]
+  (let [neg-connectivity-bar-height (- @connectivity-bar-height)]
+    (if connected?
+      (if animate?
+        (when (and @to-hide? (not @status-hidden))
+          (animation/start
+           (animation/parallel
+            [(animation/timing anim-opacity
+                               {:toValue         0
+                                :delay           800
+                                :duration        150
+                                :easing          (.-ease (animation/easing))
+                                :useNativeDriver true})
+             (animation/timing anim-y
+                               {:toValue         (if platform/desktop? 0 neg-connectivity-bar-height)
+                                :delay           800
+                                :duration        150
+                                :easing          (.-ease (animation/easing))
+                                :useNativeDriver true})])
+            ;; second param of start() - a callback that fires when animation stops
+           #(do (reset! to-hide? false) (reset! status-hidden true))))
+        (do
+          (animation/set-value anim-opacity 0)
+          (animation/set-value anim-y (if platform/desktop? 0 neg-connectivity-bar-height))
+          (reset! to-hide? false)
+          (reset! status-hidden true)))
+      ;; else
+      (if animate?
+        (when (and (not @to-hide?) @status-hidden)
+          (animation/start
+           (animation/parallel
+            [(animation/timing anim-opacity
+                               {:toValue         1
+                                :duration        150
+                                :easing          (.-ease (animation/easing))
+                                :useNativeDriver true})
+             (animation/timing anim-y
+                               {:toValue         (if platform/desktop? connectivity-bar-height 0)
+                                :duration        150
+                                :easing          (.-ease (animation/easing))
+                                :useNativeDriver true})])
+            ;; second param of start() - a callback that fires when animation stops
+           #(do (reset! to-hide? true) (reset! status-hidden false))))
+        (do
+          (animation/set-value anim-opacity 1)
+          (animation/set-value anim-y (if platform/desktop? connectivity-bar-height 0))
+          (reset! to-hide? true)
+          (reset! status-hidden false))))))
 
 (defn connectivity-status
-  [{:keys [connected?]} status-hidden]
-  (let [anim-translate-y (animation/create-value neg-connectivity-bar-height)
-        anim-opacity     (animation/create-value 0)]
+  [{:keys [connected?]} status-hidden height]
+  (let [neg-connectivity-bar-height (- @height)
+        anim-translate-y            (animation/create-value neg-connectivity-bar-height)
+        anim-opacity                (animation/create-value 0)]
     (reagent/create-class
      {:component-did-mount
       (fn []
         (manage-visibility connected? false
-                           anim-opacity anim-translate-y status-hidden))
+                           anim-opacity anim-translate-y status-hidden height))
       :should-component-update
       ;; ignore :loading-indicator?
       (fn [_ [_ old_p] [_ new_p]]
@@ -145,13 +145,13 @@ all connectivity views (we have at least one view in home and one in chat)"
       :component-did-update
       (fn [comp]
         (manage-visibility (:connected? (reagent/props comp)) true
-                           anim-opacity anim-translate-y status-hidden))
+                           anim-opacity anim-translate-y status-hidden height))
       :reagent-render
       (fn [{:keys [message on-press-event connected? connecting?] :as opts}]
         (when-not @status-hidden
           [react/animated-view {:style               (styles/text-wrapper
                                                       (assoc opts
-                                                             :height connectivity-bar-height
+                                                             :height @height
                                                              :background-color (if connected?
                                                                                  colors/green
                                                                                  colors/gray)
@@ -170,6 +170,20 @@ all connectivity views (we have at least one view in home and one in chat)"
                [react/text {:style    styles/text
                             :on-press (when on-press-event #(re-frame/dispatch [on-press-event]))}
                 (i18n/label message)]))]))})))
+
+(defn connectivity-status-comp
+  [_ _]
+  (let [height (reagent/atom 36)]
+    (fn [props status-hidden]
+      [react/view {}
+       (when-not @status-hidden
+         [react/text {:style     (merge styles/text {:position :absolute
+                                                     :opacity  0})
+                      :on-layout (fn [e]
+                                   (let [h (-> e .-nativeEvent .-layout .-height)]
+                                     (reset! height (+ h (* (:top styles/text) 2)))))}
+          (i18n/label (:message props))])
+       [connectivity-status props status-hidden height]])))
 
 ;; timer updating the enqueued status
 (def timer (atom nil))
@@ -240,7 +254,7 @@ all connectivity views (we have at least one view in home and one in chat)"
         [react/view
          (when (and loading-indicator? @status-hidden)
            [loading-indicator @window-width])]]
-       [connectivity-status
+       [connectivity-status-comp
         (merge (or ui-status-properties
                    {:connected? true :message :t/connected})
                {:window-width @window-width})
