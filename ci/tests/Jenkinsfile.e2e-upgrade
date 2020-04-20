@@ -5,7 +5,7 @@ pipeline {
   parameters {
     string(
       name: 'NETWORK',
-      description: 'Name of test network to use.',
+      description: 'Filename of APK uploaded to SauceLabs (base for upgrade, usually release build)',
       defaultValue: 'ropsten',
     )
     string(
@@ -14,7 +14,7 @@ pipeline {
     )
      string(
       name: 'APK_NAME_UPGRADE',
-      description: 'Filename of APK of upgraded application',
+      description: 'Filename of APK of upgraded application (installed on top of base)',
     )
   }
 
